@@ -123,7 +123,9 @@ func parseSExpr(input string, consoleType ConsoleType) ([]RomMetaData, error) {
 	for !r.done() {
 		if r.peek() == "game" {
 			r.next()
-			r.expect("(")
+			if err := r.expect("("); err != nil {
+				return nil, err
+			}
 			meta := RomMetaData{
 				ConsoleType:    baseType,
 				ConsoleSubType: consoleType,
@@ -134,7 +136,9 @@ func parseSExpr(input string, consoleType ConsoleType) ([]RomMetaData, error) {
 				case "name":
 					meta.Name = r.next()
 				case "rom":
-					r.expect("(")
+					if err := r.expect("("); err != nil {
+						return nil, err
+					}
 					for r.peek() != ")" && !r.done() {
 						rkey := r.next()
 						switch rkey {
@@ -144,12 +148,16 @@ func parseSExpr(input string, consoleType ConsoleType) ([]RomMetaData, error) {
 							r.next()
 						}
 					}
-					r.expect(")")
+					if err := r.expect(")"); err != nil {
+						return nil, err
+					}
 				default:
 					r.next()
 				}
 			}
-			r.expect(")")
+			if err := r.expect(")"); err != nil {
+				return nil, err
+			}
 			if meta.Name != "" {
 				results = append(results, meta)
 			}

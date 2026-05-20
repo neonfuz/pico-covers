@@ -10,6 +10,7 @@ import (
 
 	"github.com/neonfuz/pico-covers/crawler"
 	"github.com/neonfuz/pico-covers/database"
+	"github.com/neonfuz/pico-covers/events"
 )
 
 var (
@@ -43,17 +44,16 @@ func main() {
 	}
 
 	ctx := context.Background()
+	handler := cliEventHandler(*verbose)
 
 	db := database.NewDatabase()
-	if err := db.Initialize(ctx, *dbPath, *refreshDB); err != nil {
+	if err := db.Initialize(ctx, *dbPath, *refreshDB, handler); err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing database: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Loaded %d ROM records\n", len(db.Records))
-
 	c := crawler.New(*romsDir, *coversDir, db)
-	summary, err := c.Run(ctx, *concurrency, *verbose)
+	summary, err := c.Run(ctx, *concurrency, handler)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -70,4 +70,51 @@ func printVersion() {
 		return
 	}
 	fmt.Printf("pico-covers %s\n", info.Main.Version)
+}
+
+func cliEventHandler(verbose bool) events.EventHandler {
+	return func(ev events.ProgressEvent) {
+		switch ev.Kind {
+		case events.EventDBInit:
+			fmt.Println(ev.Detail)
+		case events.EventDBLoaded:
+			fmt.Printf("Loaded %d ROM records\n", ev.Total)
+		case events.EventROMStart:
+			if verbose {
+				fmt.Printf("[%d/%d] %s\n", ev.Completed, ev.Total, ev.ROMFile)
+			}
+		case events.EventROMSuccess:
+			if verbose {
+				if ev.Detail != "" {
+					fmt.Printf("  Saved (%s): %s\n", ev.Detail, ev.GameTitle)
+				} else {
+					fmt.Printf("  Saved: %s\n", ev.GameTitle)
+				}
+			} else {
+				if ev.Detail != "" {
+					fmt.Printf("[%d/%d] %s -> %s (%s)\n", ev.Completed, ev.Total, ev.ROMFile, ev.GameTitle, ev.Detail)
+				} else {
+					fmt.Printf("[%d/%d] %s -> %s\n", ev.Completed, ev.Total, ev.ROMFile, ev.GameTitle)
+				}
+			}
+		case events.EventROMSkipped:
+			if verbose {
+				fmt.Printf("%s -> %s (already have it)\n", ev.ROMFile, ev.GameTitle)
+			} else {
+				fmt.Printf("[%d/%d] %s -> %s (already have it)\n", ev.Completed, ev.Total, ev.ROMFile, ev.GameTitle)
+			}
+		case events.EventROMNotFound:
+			if verbose {
+				fmt.Printf("%s: no cover found\n", ev.ROMFile)
+			} else {
+				fmt.Printf("[%d/%d] %s: no match found\n", ev.Completed, ev.Total, ev.ROMFile)
+			}
+		case events.EventROMError:
+			fmt.Printf("%s: parse error: %s\n", ev.ROMFile, ev.Detail)
+		case events.EventInfo:
+			if verbose {
+				fmt.Printf("  %s\n", ev.Detail)
+			}
+		}
+	}
 }

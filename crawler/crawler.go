@@ -10,6 +10,7 @@ import (
 
 	"github.com/neonfuz/pico-covers/cover"
 	"github.com/neonfuz/pico-covers/database"
+	"github.com/neonfuz/pico-covers/events"
 	"github.com/neonfuz/pico-covers/rom"
 )
 
@@ -35,7 +36,7 @@ type Summary struct {
 	Errors    int
 }
 
-func (c *Crawler) Run(ctx context.Context, concurrency int, verbose bool) (*Summary, error) {
+func (c *Crawler) Run(ctx context.Context, concurrency int, handler events.EventHandler) (*Summary, error) {
 	roms, err := c.scanROMs()
 	if err != nil {
 		return nil, fmt.Errorf("scanning ROMs: %w", err)
@@ -45,8 +46,8 @@ func (c *Crawler) Run(ctx context.Context, concurrency int, verbose bool) (*Summ
 		return nil, fmt.Errorf("creating output dirs: %w", err)
 	}
 
-	fmt.Printf("Scanning %s...\n", c.RomsDir)
-	fmt.Printf("Found %d ROM files\n", len(roms))
+	handler(events.ProgressEvent{Kind: events.EventInfo, Detail: fmt.Sprintf("Scanning %s...", c.RomsDir)})
+	handler(events.ProgressEvent{Kind: events.EventInfo, Detail: fmt.Sprintf("Found %d ROM files", len(roms))})
 
 	sem := make(chan struct{}, concurrency)
 	var wg sync.WaitGroup
@@ -54,13 +55,20 @@ func (c *Crawler) Run(ctx context.Context, concurrency int, verbose bool) (*Summ
 	summary := &Summary{Total: len(roms)}
 
 	for i, romFile := range roms {
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			return summary, ctx.Err()
+		default:
+		}
+
 		wg.Add(1)
 		go func(idx int, rf string) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			result := c.processROM(rf, verbose)
+			result := c.processROM(rf, len(roms), idx+1, handler)
 
 			mu.Lock()
 			switch result {
@@ -115,10 +123,12 @@ func (c *Crawler) ensureDirs() error {
 	return nil
 }
 
-func (c *Crawler) processROM(romFile string, verbose bool) string {
+func (c *Crawler) processROM(romFile string, total, completed int, handler events.EventHandler) string {
+	handler(events.ProgressEvent{Kind: events.EventROMStart, ROMFile: filepath.Base(romFile), Total: total, Completed: completed})
+
 	r, err := rom.FromFile(romFile)
 	if err != nil {
-		fmt.Printf("%s: parse error: %v\n", filepath.Base(romFile), err)
+		handler(events.ProgressEvent{Kind: events.EventROMError, ROMFile: filepath.Base(romFile), Total: total, Completed: completed, Detail: err.Error()})
 		return "error"
 	}
 
@@ -126,38 +136,29 @@ func (c *Crawler) processROM(romFile string, verbose bool) string {
 
 	outputPath := c.outputPath(r)
 	if outputPath == "" {
-		fmt.Printf("%s: cannot determine output path\n", r.FileName)
+		handler(events.ProgressEvent{Kind: events.EventROMError, ROMFile: r.FileName, Total: total, Completed: completed, Detail: "cannot determine output path"})
 		return "error"
 	}
 
 	if _, err := os.Stat(outputPath); err == nil {
-		if verbose {
-			fmt.Printf("%s -> %s (already have it)\n", r.FileName, outputPath)
-		}
+		handler(events.ProgressEvent{Kind: events.EventROMSkipped, ROMFile: r.FileName, GameTitle: outputPath, Total: total, Completed: completed})
 		return "skip"
 	}
 
-	if verbose {
-		fmt.Printf("%s\n", r.FileName)
-		fmt.Printf("  SHA1: %s\n", r.Sha1)
-		if r.NoIntroName != "" {
-			fmt.Printf("  DB match: %s (%s)\n", r.NoIntroName, r.NoIntroConsoleType.String())
-		}
-		if r.ConsoleType.BaseType() == rom.NDS || r.ConsoleType.BaseType() == rom.DSi {
-			fmt.Printf("  Trying GameTDB...\n")
-		} else {
-			fmt.Printf("  Trying LibRetro: %s\n", c.libretroDebugURL(r))
-		}
+	handler(events.ProgressEvent{Kind: events.EventInfo, ROMFile: r.FileName, Detail: fmt.Sprintf("SHA1: %s", r.Sha1)})
+	if r.NoIntroName != "" {
+		handler(events.ProgressEvent{Kind: events.EventInfo, ROMFile: r.FileName, Detail: fmt.Sprintf("DB match: %s (%s)", r.NoIntroName, r.NoIntroConsoleType.String())})
+	}
+	if r.ConsoleType.BaseType() == rom.NDS || r.ConsoleType.BaseType() == rom.DSi {
+		handler(events.ProgressEvent{Kind: events.EventInfo, ROMFile: r.FileName, Detail: "Trying GameTDB..."})
+	} else {
+		handler(events.ProgressEvent{Kind: events.EventInfo, ROMFile: r.FileName, Detail: fmt.Sprintf("Trying LibRetro: %s", c.libretroDebugURL(r))})
 	}
 
 	err = cover.ProcessCover(r, outputPath)
 
 	if err == nil {
-		if verbose {
-			fmt.Printf("  Saved: %s\n", outputPath)
-		} else {
-			fmt.Printf("%s -> %s\n", r.FileName, outputPath)
-		}
+		handler(events.ProgressEvent{Kind: events.EventROMSuccess, ROMFile: r.FileName, GameTitle: outputPath, Total: total, Completed: completed})
 		return "ok"
 	}
 
@@ -165,17 +166,13 @@ func (c *Crawler) processROM(romFile string, verbose bool) string {
 		placeholderPath, placeholderErr := c.findDSiWarePlaceholder()
 		if placeholderErr == nil {
 			if perr := cover.ProcessDSiWarePlaceholder(placeholderPath, outputPath); perr == nil {
-				if verbose {
-					fmt.Printf("  Saved (DSiWare placeholder): %s\n", outputPath)
-				} else {
-					fmt.Printf("%s -> %s (DSiWare placeholder)\n", r.FileName, outputPath)
-				}
+				handler(events.ProgressEvent{Kind: events.EventROMSuccess, ROMFile: r.FileName, GameTitle: outputPath, Total: total, Completed: completed, Detail: "DSiWare placeholder"})
 				return "ok"
 			}
 		}
 	}
 
-	fmt.Printf("%s: no cover found\n", r.FileName)
+	handler(events.ProgressEvent{Kind: events.EventROMNotFound, ROMFile: r.FileName, Detail: "no cover found", Total: total, Completed: completed})
 	return "notfound"
 }
 

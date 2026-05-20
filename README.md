@@ -5,6 +5,19 @@ A CLI tool that downloads boxart for ROM files and saves them as 8bpp BMP covers
 ## Usage
 
 ```
+pico-covers [command]
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| (default) | Process ROMs and download covers |
+| `gui` | Launch graphical interface (Fyne) |
+
+### CLI Flags
+
+```
 pico-covers -roms <path> [options]
 ```
 
@@ -69,10 +82,28 @@ pico-covers -roms ~/roms -refresh-db -v
 6. Quantizes to 256 colors with Floyd-Steinberg dithering
 7. Saves as 8bpp BMP in the appropriate output directory
 
-## Build
+## GUI
+
+Launch the graphical interface:
 
 ```sh
-go build
+pico-covers gui
+```
+
+Opens a native Fyne window with config, progress, and summary views. See [spec/GUI.md](spec/GUI.md) for full details.
+
+GUI builds require Cgo:
+
+```sh
+CGO_ENABLED=1 go build -o pico-covers
+```
+
+## Build
+
+CLI-only build (no Cgo required):
+
+```sh
+CGO_ENABLED=0 go build -tags "!fyne" -o pico-covers-cli
 ```
 
 ## Database

@@ -20,20 +20,20 @@ const (
 )
 
 var consoleTypeStrings = map[ConsoleType]string{
-	Unknown:                  "Unknown",
-	NES:                      "Nintendo Entertainment System",
-	SNES:                     "Super Nintendo Entertainment System",
-	GB:                       "Game Boy",
-	GBC:                      "Game Boy Color",
-	GBA:                      "Game Boy Advance",
-	NDS:                      "Nintendo DS",
-	DSi:                      "Nintendo DSi",
-	GameGear:                 "Sega Game Gear",
-	Genesis:                  "Sega Genesis",
-	MasterSystem:             "Sega Master System",
-	FDS:                      "Famicom Disk System",
-	NintendoDSDownloadPlay:   "Nintendo DS (Download Play)",
-	NintendoDSiDigital:       "Nintendo DSi (Digital)",
+	Unknown:                "Unknown",
+	NES:                    "Nintendo Entertainment System",
+	SNES:                   "Super Nintendo Entertainment System",
+	GB:                     "Game Boy",
+	GBC:                    "Game Boy Color",
+	GBA:                    "Game Boy Advance",
+	NDS:                    "Nintendo DS",
+	DSi:                    "Nintendo DSi",
+	GameGear:               "Sega Game Gear",
+	Genesis:                "Sega Genesis",
+	MasterSystem:           "Sega Master System",
+	FDS:                    "Famicom Disk System",
+	NintendoDSDownloadPlay: "Nintendo DS (Download Play)",
+	NintendoDSiDigital:     "Nintendo DSi (Digital)",
 }
 
 func (c ConsoleType) String() string {

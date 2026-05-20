@@ -77,7 +77,7 @@ func DownloadNoIntro(ctx context.Context, consoleType ConsoleType) ([]RomMetaDat
 	if err != nil {
 		return nil, fmt.Errorf("GET request: %w", err)
 	}
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
 	resp.Body.Close()
 
 	form := url.Values{}

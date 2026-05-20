@@ -1,12 +1,12 @@
 package cover
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
-	"crypto/tls"
 )
 
 var httpClient *http.Client

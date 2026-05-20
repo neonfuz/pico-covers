@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/neonfuz/pico-covers/events"
 )
 
 type Database struct {
@@ -26,7 +28,7 @@ func NewDatabase() *Database {
 	}
 }
 
-func (db *Database) Initialize(ctx context.Context, cachePath string, forceRefresh bool) error {
+func (db *Database) Initialize(ctx context.Context, cachePath string, forceRefresh bool, handler events.EventHandler) error {
 	if cachePath == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -37,8 +39,15 @@ func (db *Database) Initialize(ctx context.Context, cachePath string, forceRefre
 
 	if !forceRefresh {
 		if err := db.loadCache(cachePath); err == nil {
+			if handler != nil {
+				handler(events.ProgressEvent{Kind: events.EventDBLoaded, Total: len(db.Records)})
+			}
 			return nil
 		}
+	}
+
+	if handler != nil {
+		handler(events.ProgressEvent{Kind: events.EventDBInit, Detail: "Downloading NoIntro database..."})
 	}
 
 	var allRecords []RomMetaData
@@ -66,6 +75,10 @@ func (db *Database) Initialize(ctx context.Context, cachePath string, forceRefre
 
 	if err := db.saveCache(cachePath); err != nil {
 		return fmt.Errorf("saving cache: %w", err)
+	}
+
+	if handler != nil {
+		handler(events.ProgressEvent{Kind: events.EventDBLoaded, Total: len(db.Records)})
 	}
 
 	return nil
