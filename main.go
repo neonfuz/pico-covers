@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/neonfuz/pico-covers/internal/crawler"
-	"github.com/neonfuz/pico-covers/internal/database"
+	"github.com/neonfuz/pico-covers/crawler"
+	"github.com/neonfuz/pico-covers/database"
 )
 
 var (

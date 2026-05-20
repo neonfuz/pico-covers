@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/neonfuz/pico-covers/internal/rom"
+	"github.com/neonfuz/pico-covers/rom"
 )
 
 var sanitizeReplacer = strings.NewReplacer(

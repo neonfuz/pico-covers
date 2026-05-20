@@ -3,7 +3,7 @@ package cover
 import (
 	"fmt"
 
-	"github.com/neonfuz/pico-covers/internal/rom"
+	"github.com/neonfuz/pico-covers/rom"
 )
 
 var regionMap = map[byte]string{

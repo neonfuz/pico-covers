@@ -9,7 +9,7 @@ import (
 	_ "image/png"
 	"os"
 
-	"github.com/neonfuz/pico-covers/internal/rom"
+	"github.com/neonfuz/pico-covers/rom"
 )
 
 var ErrNotFound = errors.New("cover not found")

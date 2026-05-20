@@ -6,7 +6,10 @@ Command-line interface design for pico-covers.
 
 ```
 pico-covers -roms <path> [options]
+pico-covers gui
 ```
+
+The `gui` subcommand launches a Fyne-based graphical interface. See [GUI.md](GUI.md).
 
 ## Flags
 
@@ -58,6 +61,10 @@ Verbose (`-v`):
   Downloaded, resizing to 106x96 → 128x96 canvas, quantizing 256 colors
   Saved: covers/gba/BPRE.bmp
 ```
+
+## Event System
+
+The crawler emits typed events through an `EventHandler` callback rather than printing directly. The CLI implements a handler that formats events for stdout. The same events drive the [GUI](GUI.md) progress view. This means all output (CLI verbose, CLI non-verbose, GUI) flows through the same event stream.
 
 ## Exit Codes
 

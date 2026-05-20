@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/neonfuz/pico-covers/internal/cover"
-	"github.com/neonfuz/pico-covers/internal/database"
-	"github.com/neonfuz/pico-covers/internal/rom"
+	"github.com/neonfuz/pico-covers/cover"
+	"github.com/neonfuz/pico-covers/database"
+	"github.com/neonfuz/pico-covers/rom"
 )
 
 type Crawler struct {
