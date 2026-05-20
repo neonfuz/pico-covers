@@ -113,3 +113,7 @@ CGO_ENABLED=0 go build -tags "!fyne" -o pico-covers-cli
 ## Database
 
 On first run, pico-covers downloads the NoIntro DAT database from datomatic.no-intro.org and caches it as a gzip-compressed JSON file. Subsequent runs use the cache. Use `-refresh-db` to force a fresh download.
+
+## Inspired By
+
+[TwilightBoxart](https://github.com/Kirozen/TwilightBoxart) — the original cover downloader for Twilight Menu++ on DS/DSi flashcarts.
