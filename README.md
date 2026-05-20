@@ -2,6 +2,10 @@
 
 A CLI tool that downloads boxart for ROM files and saves them as 8bpp BMP covers for [pico-launcher](https://github.com/neonfuz/pico-launcher).
 
+<p align="center">
+  <img src="screenshot.png" alt="pico-covers GUI screenshot" width="600">
+</p>
+
 ## Usage
 
 ```
