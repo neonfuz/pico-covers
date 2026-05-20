@@ -30,6 +30,14 @@ func main() {
 		return
 	}
 
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage:\n")
+		fmt.Fprintf(os.Stderr, "  pico-covers -roms <path> [options]\n")
+		fmt.Fprintf(os.Stderr, "  pico-covers gui\n\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 
 	if *showVersion {
@@ -38,9 +46,7 @@ func main() {
 	}
 
 	if *romsDir == "" {
-		fmt.Fprintln(os.Stderr, "Error: -roms flag is required")
-		fmt.Fprintln(os.Stderr, "Usage: pico-covers -roms <path> [options]")
-		flag.PrintDefaults()
+		flag.Usage()
 		os.Exit(1)
 	}
 

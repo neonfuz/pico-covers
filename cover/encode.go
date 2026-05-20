@@ -18,18 +18,18 @@ func EncodeBMP(img *image.Paletted, filePath string) error {
 	tmpPath := tmpFile.Name()
 
 	if err := bmp.Encode(tmpFile, img); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return err
 	}
 
 	if err := tmpFile.Close(); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return err
 	}
 
 	if err := os.Rename(tmpPath, filePath); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return err
 	}
 

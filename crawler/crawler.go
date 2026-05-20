@@ -90,11 +90,6 @@ func (c *Crawler) Run(ctx context.Context, concurrency int, handler events.Event
 	return summary, nil
 }
 
-type romJob struct {
-	idx  int
-	path string
-}
-
 func (c *Crawler) scanROMs() ([]string, error) {
 	var roms []string
 	err := filepath.WalkDir(c.RomsDir, func(path string, d os.DirEntry, err error) error {

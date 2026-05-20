@@ -117,7 +117,7 @@ func fromZip(data []byte, zipFileName string) (*ROM, error) {
 				return nil, err
 			}
 			innerData, err := io.ReadAll(rc)
-			rc.Close()
+			_ = rc.Close()
 			if err != nil {
 				return nil, err
 			}

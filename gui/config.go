@@ -67,7 +67,7 @@ func newConfigView(state *appState) fyne.CanvasObject {
 			}
 			dbPathEntry.SetText(reader.URI().Path())
 			prefs.SetString("db_path", reader.URI().Path())
-			reader.Close()
+			_ = reader.Close()
 		}, state.window)
 	})
 

@@ -32,16 +32,6 @@ type progressState struct {
 	currentROM string
 	status     string
 	items      []string
-	done       bool
-}
-
-func (ps *progressState) addItem(s string) {
-	ps.mu.Lock()
-	defer ps.mu.Unlock()
-	ps.items = append([]string{s}, ps.items...)
-	if len(ps.items) > 200 {
-		ps.items = ps.items[:200]
-	}
 }
 
 func (ps *progressState) snapshot() (completed, total int, rom, status string, items []string) {

@@ -45,7 +45,7 @@ func ParseLibRetroDat(ctx context.Context, consoleType ConsoleType) ([]RomMetaDa
 	if err != nil {
 		return nil, fmt.Errorf("fetching LibRetro DAT: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -59,13 +59,13 @@ func tokenize(input string) []string {
 	var tokens []string
 	i := 0
 	for i < len(input) {
-		switch {
-		case input[i] == ' ' || input[i] == '\t' || input[i] == '\n' || input[i] == '\r':
+		switch input[i] {
+		case ' ', '\t', '\n', '\r':
 			i++
-		case input[i] == '(' || input[i] == ')':
+		case '(', ')':
 			tokens = append(tokens, string(input[i]))
 			i++
-		case input[i] == '"':
+		case '"':
 			i++
 			start := i
 			for i < len(input) && input[i] != '"' {

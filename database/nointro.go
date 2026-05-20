@@ -78,7 +78,7 @@ func DownloadNoIntro(ctx context.Context, consoleType ConsoleType) ([]RomMetaDat
 		return nil, fmt.Errorf("GET request: %w", err)
 	}
 	_, _ = io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	form := url.Values{}
 	form.Set("download", "Download")
@@ -94,7 +94,7 @@ func DownloadNoIntro(ctx context.Context, consoleType ConsoleType) ([]RomMetaDat
 	if err != nil {
 		return nil, fmt.Errorf("POST request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -114,7 +114,7 @@ func DownloadNoIntro(ctx context.Context, consoleType ConsoleType) ([]RomMetaDat
 	if err != nil {
 		return nil, fmt.Errorf("opening xml in zip: %w", err)
 	}
-	defer xmlFile.Close()
+	defer func() { _ = xmlFile.Close() }()
 
 	xmlData, err := io.ReadAll(xmlFile)
 	if err != nil {

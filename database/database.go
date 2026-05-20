@@ -100,13 +100,13 @@ func (db *Database) loadCache(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	gz, err := gzip.NewReader(f)
 	if err != nil {
 		return err
 	}
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 
 	data, err := io.ReadAll(gz)
 	if err != nil {
@@ -135,10 +135,10 @@ func (db *Database) saveCache(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	gz := gzip.NewWriter(f)
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 
 	data, err := json.Marshal(db.Records)
 	if err != nil {
