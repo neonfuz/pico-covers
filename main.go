@@ -11,6 +11,7 @@ import (
 	"github.com/neonfuz/pico-covers/crawler"
 	"github.com/neonfuz/pico-covers/database"
 	"github.com/neonfuz/pico-covers/events"
+	"github.com/neonfuz/pico-covers/gui"
 )
 
 var (
@@ -24,6 +25,11 @@ var (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "gui" {
+		gui.Run()
+		return
+	}
+
 	flag.Parse()
 
 	if *showVersion {
